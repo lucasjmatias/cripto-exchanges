@@ -71,7 +71,7 @@ describe('General CoinList test', () => {
 describe('Pagination CoinList test', () => {
   beforeAll(() => {
     fetchMock.resetMocks();
-    fetchMock.mockResponseOnce(
+    fetchMock.mockResponses(
       JSON.stringify([
         {
           id: 'gdax',
@@ -82,6 +82,19 @@ describe('Pagination CoinList test', () => {
             'https://assets.coingecko.com/markets/images/23/small/Coinbase_Coin_Primary.png?1621471875',
           trust_score: 10,
           trade_volume_24h_btc: 60098.05805095501,
+        },
+      ]),
+      JSON.stringify([
+        {
+          id: 'bybit_spot',
+          name: 'Bybit',
+          year_established: 2018,
+          country: 'British Virgin Islands',
+          image:
+            'https://assets.coingecko.com/markets/images/698/small/bybit_spot.png?1629971794',
+          trust_score: 10,
+          trust_score_rank: 2,
+          trade_volume_24h_btc: 50887.355620258204,
         },
       ])
     );
@@ -97,22 +110,6 @@ describe('Pagination CoinList test', () => {
     const nextButton = await screen.findByRole('button', {
       name: /next page/i,
     });
-
-    fetchMock.mockResponse(
-      JSON.stringify([
-        {
-          id: 'bybit_spot',
-          name: 'Bybit',
-          year_established: 2018,
-          country: 'British Virgin Islands',
-          image:
-            'https://assets.coingecko.com/markets/images/698/small/bybit_spot.png?1629971794',
-          trust_score: 10,
-          trust_score_rank: 2,
-          trade_volume_24h_btc: 50887.355620258204,
-        },
-      ])
-    );
 
     fireEvent.click(nextButton);
 

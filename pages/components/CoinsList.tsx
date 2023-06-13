@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import CoinSummary from './CoinSummary';
 
 interface Coin {
@@ -13,18 +14,24 @@ interface Coin {
 }
 
 export default function CoinsList() {
-  const [coins, setCoins] = useState<Coin[]>([]);
+  const [page, setPage] = useState<number>(1);
 
-  useEffect(() => {
-    fetch('https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=1')
-      .then(resp => resp.json())
-      .then(setCoins);
-  }, []);
+  const {
+    data: coins,
+    error,
+    isLoading,
+  } = useSWR<Coin[]>(
+    `https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=${page}`
+  );
+
+  // useEffect(() => {
+  //   fetch('https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=1')
+  //     .then(resp => resp.json())
+  //     .then(setCoins);
+  // }, []);
 
   function handleNextPage() {
-    fetch('https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=2')
-      .then(resp => resp.json())
-      .then(setCoins);
+    setPage(currPage => currPage + 1);
   }
 
   return (
@@ -35,10 +42,10 @@ export default function CoinsList() {
         <button onClick={handleNextPage}>Next Page</button>
       </div>
       <div>
+        {isLoading ? <div>Loading...</div> : ''}
         <ul aria-labelledby="fruits-heading">
-          {coins.map(coin => (
-            <CoinSummary key={coin.id} coin={coin} />
-          ))}
+          {coins &&
+            coins.map(coin => <CoinSummary key={coin.id} coin={coin} />)}
         </ul>
       </div>
     </div>

@@ -1,6 +1,17 @@
-import '@/styles/global.css'
-import type { AppProps } from 'next/app'
+import '@/styles/global.css';
+import { fetcher } from 'helpers/fetcher';
+import type { AppProps } from 'next/app';
+import { SWRConfig } from 'swr';
 
 export default function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return (
+    <SWRConfig
+      value={{
+        refreshInterval: 30000,
+        fetcher: fetcher,
+      }}
+    >
+      <Component {...pageProps} />
+    </SWRConfig>
+  );
 }

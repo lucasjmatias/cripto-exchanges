@@ -1,16 +1,12 @@
 import CoinsList from '@/pages/components/CoinsList';
-import {
-  fireEvent,
-  getByText,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { SWRConfig } from 'swr';
+
+import { fireEvent, getByText, waitFor, within } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
+import { render, screen } from '../utils/test-utils';
 
 describe('General CoinList test', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     fetchMock.resetMocks();
     fetchMock.mockResponse(
       JSON.stringify([

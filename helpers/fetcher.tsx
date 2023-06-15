@@ -1,2 +1,5 @@
 export const fetcher = (...args: [any]) =>
-  fetch(...args).then(res => res.json());
+  fetch(...args).then(async res => ({
+    data: await res.json(),
+    headers: res.headers,
+  }));

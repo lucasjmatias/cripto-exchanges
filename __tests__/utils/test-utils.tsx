@@ -8,7 +8,11 @@ const Wrapper = ({ children }: any) => {
       value={{
         provider: () => new Map(),
         dedupingInterval: 0,
-        fetcher: (...args: [any]) => fetch(...args).then(res => res.json()),
+        fetcher: (...args: [any]) =>
+          fetch(...args).then(async res => ({
+            data: await res.json(),
+            headers: res.headers,
+          })),
       }}
     >
       {children}

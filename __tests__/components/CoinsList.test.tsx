@@ -65,57 +65,136 @@ describe('General CoinList test', () => {
 });
 
 describe('Pagination CoinList test', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     fetchMock.resetMocks();
     fetchMock.mockResponses(
-      JSON.stringify([
+      [
+        JSON.stringify([
+          {
+            id: 'gdax',
+            name: 'Coinbase Exchange',
+            year_established: 2012,
+            country: 'United States',
+            image:
+              'https://assets.coingecko.com/markets/images/23/small/Coinbase_Coin_Primary.png?1621471875',
+            trust_score: 10,
+            trade_volume_24h_btc: 60098.05805095501,
+          },
+        ]),
         {
-          id: 'gdax',
-          name: 'Coinbase Exchange',
-          year_established: 2012,
-          country: 'United States',
-          image:
-            'https://assets.coingecko.com/markets/images/23/small/Coinbase_Coin_Primary.png?1621471875',
-          trust_score: 10,
-          trade_volume_24h_btc: 60098.05805095501,
+          headers: [
+            ['per-page', '1'],
+            ['total', '2'],
+          ],
         },
-      ]),
-      JSON.stringify([
+      ],
+      [
+        JSON.stringify([
+          {
+            id: 'bybit_spot',
+            name: 'Bybit',
+            year_established: 2018,
+            country: 'British Virgin Islands',
+            image:
+              'https://assets.coingecko.com/markets/images/698/small/bybit_spot.png?1629971794',
+            trust_score: 10,
+            trust_score_rank: 2,
+            trade_volume_24h_btc: 50887.355620258204,
+          },
+        ]),
         {
-          id: 'bybit_spot',
-          name: 'Bybit',
-          year_established: 2018,
-          country: 'British Virgin Islands',
-          image:
-            'https://assets.coingecko.com/markets/images/698/small/bybit_spot.png?1629971794',
-          trust_score: 10,
-          trust_score_rank: 2,
-          trade_volume_24h_btc: 50887.355620258204,
+          headers: [
+            ['per-page', '1'],
+            ['total', '2'],
+          ],
         },
-      ])
+      ]
     );
   });
 
+  async function validateFirstPage() {
+    const coinBaseName = await screen.findByText(/coinbase exchange/i);
+    expect(coinBaseName).toBeInTheDocument();
+    const byBitName = screen.queryByText(/bybit/i);
+    expect(byBitName).not.toBeInTheDocument();
+  }
+
+  async function validateSecondPage() {
+    const coinBaseName = screen.queryByText(/coinbase exchange/i);
+    expect(coinBaseName).not.toBeInTheDocument();
+    const byBitName = await screen.findByText(/bybit/i);
+    expect(byBitName).toBeInTheDocument();
+  }
+
   it('should go to next page', async () => {
     render(<CoinsList />);
-    const coinBaseNamePage1 = await screen.findByText(/coinbase exchange/i);
-    expect(coinBaseNamePage1).toBeInTheDocument();
-    const byBitNamePage1 = screen.queryByText(/bybit/i);
-    expect(byBitNamePage1).not.toBeInTheDocument();
 
+    await validateFirstPage();
     const nextButton = await screen.findByRole('button', {
       name: /next page/i,
     });
 
     fireEvent.click(nextButton);
 
-    await waitFor(() => {
-      expect(screen.getByText(/bybit/i)).toBeInTheDocument();
+    await validateSecondPage();
+  });
+
+  it('should have previous button disable only on first page', async () => {
+    render(<CoinsList />);
+
+    const prevButton = await screen.findByRole('button', {
+      name: /previous page/i,
+    });
+    expect(prevButton).toBeDisabled();
+
+    const nextButton = await screen.findByRole('button', {
+      name: /next page/i,
+    });
+    fireEvent.click(nextButton);
+
+    expect(prevButton).toBeEnabled();
+  });
+
+  it('should be able to back to first page', async () => {
+    render(<CoinsList />);
+
+    const prevButton = await screen.findByRole('button', {
+      name: /previous page/i,
     });
 
-    const coinBaseNamePage2 = screen.queryByText(/coinbase exchange/i);
-    expect(coinBaseNamePage2).not.toBeInTheDocument();
-    const byBitNamePage2 = await screen.findByText(/bybit/i);
-    expect(byBitNamePage2).toBeInTheDocument();
+    const nextButton = await screen.findByRole('button', {
+      name: /next page/i,
+    });
+
+    await validateFirstPage();
+
+    fireEvent.click(nextButton);
+    await validateSecondPage();
+
+    fireEvent.click(prevButton);
+    await validateFirstPage();
+  });
+
+  it('should disable next page when on last page', async () => {
+    render(<CoinsList />);
+
+    const prevButton = await screen.findByRole('button', {
+      name: /previous page/i,
+    });
+
+    const nextButton = await screen.findByRole('button', {
+      name: /next page/i,
+    });
+
+    await validateFirstPage();
+    expect(nextButton).toBeEnabled();
+
+    fireEvent.click(nextButton);
+    await validateSecondPage();
+    expect(nextButton).toBeDisabled();
+
+    fireEvent.click(prevButton);
+    await validateFirstPage();
+    expect(nextButton).toBeEnabled();
   });
 });

@@ -13,22 +13,29 @@ interface Coin {
   trade_volume_24h_btc: number;
 }
 
+interface CoinRequest {
+  data: Coin[];
+  headers: any;
+}
+
 export default function CoinsList() {
   const [page, setPage] = useState<number>(1);
 
-  const {
-    data: coins,
-    error,
-    isLoading,
-  } = useSWR<Coin[]>(
+  const { data, error, isLoading } = useSWR<CoinRequest>(
     `https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=${page}`
   );
+  const coins = (data && data.data) || [];
+  const headers = data?.headers;
 
-  // useEffect(() => {
-  //   fetch('https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=1')
-  //     .then(resp => resp.json())
-  //     .then(setCoins);
-  // }, []);
+  const perPage = headers ? headers.get('per-page') : 1;
+  const total = headers ? headers.get('total') : 1;
+  const lastPage = Math.floor(total / perPage);
+
+  if (error) return <div>Could not fetch coins data</div>;
+
+  function handlePreviousPage() {
+    setPage(currPage => (currPage > 1 ? currPage - 1 : 1));
+  }
 
   function handleNextPage() {
     setPage(currPage => currPage + 1);
@@ -38,8 +45,12 @@ export default function CoinsList() {
     <div>
       <h1 id="fruits-heading">Coins</h1>
       <div>
-        <button disabled>Previous Page</button>
-        <button onClick={handleNextPage}>Next Page</button>
+        <button onClick={handlePreviousPage} disabled={page <= 1}>
+          Previous Page
+        </button>
+        <button onClick={handleNextPage} disabled={page >= lastPage}>
+          Next Page
+        </button>
       </div>
       <div>
         {isLoading ? <div>Loading...</div> : ''}

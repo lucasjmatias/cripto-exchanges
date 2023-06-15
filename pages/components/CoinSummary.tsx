@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import isURL from 'validator/lib/isURL';
+import { useState } from 'react';
 
 interface Props {
   coin: Coin;
@@ -14,10 +16,22 @@ export default function CoinSummary({ coin }: Props) {
     trust_score,
     trade_volume_24h_btc,
   } = coin;
+  const [imageSrc, setImageSrc] = useState(
+    isURL(image) ? image : '/vercel.svg'
+  );
   return (
     <li key={id}>
       <div>
-        <Image src={image} alt={name} width={40} height={40} />
+        <Image
+          src={imageSrc}
+          alt={name}
+          width={40}
+          height={40}
+          onError={() => {
+            console.log('erro');
+            setImageSrc('/vercel.svg');
+          }}
+        />
         <span>{coin.name}</span>
       </div>
       <div>

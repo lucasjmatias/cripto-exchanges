@@ -8,10 +8,12 @@
     "test:ci": "jest --ci"
   },
   "dependencies": {
+    "@types/validator": "^13.7.17",
     "next": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "swr": "^2.1.5"
+    "swr": "^2.1.5",
+    "validator": "^13.9.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "5.16.4",

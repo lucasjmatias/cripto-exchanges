@@ -1,9 +1,8 @@
 import CoinsList from '@/pages/components/CoinsList';
-import { SWRConfig } from 'swr';
 
 import { fireEvent, getByText, waitFor, within } from '@testing-library/react';
 import fetchMock from 'jest-fetch-mock';
-import { render, screen } from '../utils/test-utils';
+import { render, screen } from '@/helpers/test-utils';
 
 describe('General CoinList test', () => {
   beforeEach(() => {
@@ -152,7 +151,10 @@ describe('Pagination CoinList test', () => {
     });
     fireEvent.click(nextButton);
 
-    expect(prevButton).toBeEnabled();
+    const prevButtonPage2 = await screen.findByRole('button', {
+      name: /previous page/i,
+    });
+    expect(prevButtonPage2).toBeEnabled();
   });
 
   it('should be able to back to first page', async () => {
@@ -196,5 +198,52 @@ describe('Pagination CoinList test', () => {
     fireEvent.click(prevButton);
     await validateFirstPage();
     expect(nextButton).toBeEnabled();
+  });
+});
+
+describe('Filter coins', () => {
+  beforeEach(() => {
+    fetchMock.resetMocks();
+    fetchMock.mockResponse(
+      JSON.stringify([
+        {
+          id: 'gdax',
+          name: 'Coinbase Exchange',
+          year_established: 2012,
+          country: 'United States',
+          image:
+            'https://assets.coingecko.com/markets/images/23/small/Coinbase_Coin_Primary.png?1621471875',
+          trust_score: 10,
+          trade_volume_24h_btc: 60098.05805095501,
+        },
+        {
+          id: 'bybit_spot',
+          name: 'Bybit',
+          year_established: 2018,
+          country: 'British Virgin Islands',
+          image:
+            'https://assets.coingecko.com/markets/images/698/small/bybit_spot.png?1629971794',
+          trust_score: 10,
+          trust_score_rank: 2,
+          trade_volume_24h_btc: 50887.355620258204,
+        },
+      ])
+    );
+  });
+
+  it('should filter correctly', async () => {
+    render(<CoinsList />);
+
+    await screen.findByText(/coinbase/i);
+    await screen.findByText(/bybit/i);
+
+    const filter = screen.getByLabelText(/filter/i);
+    fireEvent.change(filter, { target: { value: 'coinbase' } });
+
+    const coinBaseItem = await screen.findByText(/coinbase/i);
+    expect(coinBaseItem).toBeInTheDocument();
+
+    const byBitItem = screen.queryByText(/bybit/i);
+    expect(byBitItem).not.toBeInTheDocument();
   });
 });

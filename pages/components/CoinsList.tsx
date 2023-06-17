@@ -18,18 +18,32 @@ interface CoinRequest {
   headers: any;
 }
 
+const prepareCoins = (filterText: string) => (coins: Coin[] | undefined) => {
+  if (!coins) {
+    return [];
+  }
+  if (filterText === '') {
+    return coins;
+  }
+  return coins.filter(coin =>
+    coin.name.toLowerCase().includes(filterText.toLowerCase())
+  );
+};
+
 export default function CoinsList() {
+  const [filterText, setFilterText] = useState<string>('');
   const [page, setPage] = useState<number>(1);
 
   const { data, error, isLoading } = useSWR<CoinRequest>(
     `https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=${page}`
   );
-  const coins = (data && data.data) || [];
+  const coins = prepareCoins(filterText)(data?.data);
+  const totalOnPage = data?.data?.length || 0;
   const headers = data?.headers;
 
   const perPage = headers ? headers.get('per-page') : 1;
   const total = headers ? headers.get('total') : 1;
-  const lastPage = Math.floor(total / perPage);
+  const lastPage = Math.ceil(total / perPage);
 
   if (error) return <div>Could not fetch coins data</div>;
 
@@ -39,6 +53,10 @@ export default function CoinsList() {
 
   function handleNextPage() {
     setPage(currPage => currPage + 1);
+  }
+
+  function handleFilter(event: React.FormEvent<HTMLInputElement>) {
+    setFilterText(event.currentTarget.value);
   }
 
   return (
@@ -53,10 +71,26 @@ export default function CoinsList() {
         </button>
       </div>
       <div>
+        <label htmlFor="coin-filter-input">Filter</label>
+        <input
+          id="coin-filter-input"
+          type="text"
+          placeholder="Filter by name"
+          value={filterText}
+          onChange={handleFilter}
+        />
+      </div>
+      {coins && filterText && (
+        <div>
+          Showing {coins.length} of {totalOnPage}
+        </div>
+      )}
+      <div>
         {isLoading ? <div>Loading...</div> : ''}
         <ul aria-labelledby="fruits-heading">
-          {coins &&
-            coins.map(coin => <CoinSummary key={coin.id} coin={coin} />)}
+          {coins.map(coin => (
+            <CoinSummary key={coin.id} coin={coin} />
+          ))}
         </ul>
       </div>
     </div>

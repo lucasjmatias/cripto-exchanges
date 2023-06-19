@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import CoinSummary from './CoinSummary';
+import { usePagination } from '../hooks/paginationHooks';
 
 interface Coin {
   id: string;
@@ -32,23 +33,19 @@ const prepareCoins = (filterText: string) => (coins: Coin[] | undefined) => {
 
 export default function CoinsList() {
   const [filterText, setFilterText] = useState<string>('');
-  const [page, setPage] = useState<number>(1);
 
-  const { data, error, isLoading } = useSWR<CoinRequest>(
-    `https://api.coingecko.com/api/v3/exchanges/?per_page=100&page=${page}`
-  );
-  const coins = prepareCoins(filterText)(data?.data);
-  const totalOnPage = data?.data?.length || 0;
-  const headers = data?.headers;
-
-  const perPage = headers ? headers.get('per-page') : 1;
-  const total = headers ? headers.get('total') : 1;
-  const lastPage = Math.ceil(total / perPage);
+  const { page, setPage, data, error, isLoading, lastPage } =
+    usePagination<Coin>(
+      `https://api.coingecko.com/api/v3/exchanges/?per_page=100`,
+      'page'
+    );
+  const coins = prepareCoins(filterText)(data);
+  const totalOnPage = data?.length || 0;
 
   if (error) return <div>Could not fetch coins data</div>;
 
   function handlePreviousPage() {
-    setPage(currPage => (currPage > 1 ? currPage - 1 : 1));
+    setPage(currPage => currPage - 1);
   }
 
   function handleNextPage() {

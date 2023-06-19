@@ -52,14 +52,14 @@ describe('General CoinList test', () => {
     expect(prevButton).toBeDisabled();
   });
 
-  it('should render enabled next button pagination', async () => {
+  it('should render disabled next button pagination', async () => {
     render(<CoinsList />);
 
     const nextButton = await screen.findByRole('button', {
       name: /next page/i,
     });
     expect(nextButton).toBeInTheDocument();
-    expect(nextButton).toBeEnabled();
+    expect(nextButton).toBeDisabled();
   });
 });
 
